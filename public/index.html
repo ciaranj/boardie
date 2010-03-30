@@ -9,32 +9,17 @@
       else if($("#txt").val()===""){$("#txt").focus();return false}
       else {return true}
     }
-    var colour= "rgb(" +  Math.floor((Math.random()*255))+"," + Math.floor((Math.random()*255)) + "," + Math.floor((Math.random()*255)) +")";
-  /*  var canvas = document.getElementById("canvas");
-    var ctx = canvas.getContext("2d");
-    ctx.fillStyle = colour;
-    ctx.fillRect (0, 0, 500, 10);
-    */
     var ws = $.ws.conn({
       url : 'ws://localhost:8080',
       hbStr: null,
-      renderbox: function(boxString) {
-/*        var canvas = document.getElementById("canvas");
-        var ctx = canvas.getContext("2d");
-        ctx.fillStyle = boxString[5];
-        ctx.fillRect (boxString[1], boxString[2], boxString[3], boxString[4]); */
-      },
       onopen : function () {
         console.log('connected');
-
       },
-
       onmessage : function (event) {          
         try {
           var packets=eval(event);
           contextr.clearRect(0, 0, canvas.width, canvas.height);
           for(var i=0;i< packets[1].length;i++)  {
-//            console.log(JSON.stringify(packets[1][i])) 
               switch(packets[1][i][0]) {
                 case 'box':
                   contextr.strokeRect(packets[1][i][1], packets[1][i][2], packets[1][i][3], packets[1][i][4]);
