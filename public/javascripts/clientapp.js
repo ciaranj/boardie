@@ -21,7 +21,7 @@ $(document).ready(function () {
     }
   }
   var ws = $.ws.conn({
-    url : 'ws://localhost:8080',
+    url : 'ws://localhost:8081',
     hbStr: null,
     onopen : function () {
       console.log('connected');

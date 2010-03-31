@@ -1,0 +1,32 @@
+%html
+  %head
+    %script{ type:"text/javascript", src:"public/javascripts/jquery-1.4.2.min.js"}
+    %script{ type:"text/javascript", src:"public/javascripts/jquery.ws-0.3-noenc-pre.js"}
+    %script{ type:"text/javascript", src:"public/javascripts/clientapp.js"}
+    %link{ rel:"stylesheet",href:"public/stylesheets/index.css"}
+  %body
+    %p
+      %label
+        Drawing tool:    
+        %select{ id:"dtool" }
+          %option{ value:"line" } Line  
+          %option{ value:"rect" } Rectangle  
+          %option{ value:"pencil" } Pencil
+    #container
+      %canvas#imageView{ width:400, height: 300}
+        %p
+          Unfortunately, your browser is currently unsupported by our web application.  We are sorry for the inconvenience. Please use one of the supported browsers listed below, or draw the image you want using an offline tool.
+        %p
+          Supported browsers: 
+          %a{ href:"http://www.opera.com" }
+            Opera
+          ,
+          %a{ href:"http://www.mozilla.com" }
+            Firefox
+          ,
+          %a{ href:"http://www.apple.com/safari" }
+            Safari
+          ,
+          %a{ href:"http://www.konqueror.org" }
+            Konqueror
+          .
