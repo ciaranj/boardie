@@ -8,6 +8,7 @@ var operations= [];
 var connections= {};
 var no_connections= 0;
 var disconnect_reason = 'Closed by client';
+var outstanding_flushes= 0;
 
 //Packet types:
 const DEFAULT_PACKET= 1;
@@ -17,24 +18,38 @@ const DEFAULT_PACKET= 1;
  * @return {undefined} Nothing
  */
 function flush_queues() {
-  for (var id in connections) {
-    var connection = connections[id];
-    
-    if (connection.state != CONNECTED) {
-      continue;
+  if( outstanding_flushes <= 0 ) {
+    for (var id in connections) {             
+      var connection = connections[id];
+      if (connection.state != CONNECTED) {
+        continue;
+      }
+      ;(function(conn) { 
+        outstanding_flushes++;
+          process.nextTick(
+            function() {
+              try { 
+                conn.flush_queue();
+              }catch(e) {
+                sys.debug(e);
+              }
+              finally {
+                outstanding_flushes--;
+              }
+            }); 
+       })(connection)
     }
-    connection.flush_queue();
   }
 }
 
-setInterval(flush_queues, 100);
+setInterval(flush_queues, 10);
 
 
 ws.createServer(function (websocket) {
   var connection_id = 0,
         message_queue = [],
         options= {
-          max_connections: 4
+          max_connections: 1000
         };
         
   websocket.flush_queue= function() {
@@ -79,6 +94,7 @@ ws.createServer(function (websocket) {
             websocket.kill('server busy');
             return;
           }
+          sys.debug('Active connections: ' + no_connections)
           while (connections[++connection_id]);
           websocket.id = connection_id;
           websocket.operationsSeen=0;
@@ -90,6 +106,7 @@ ws.createServer(function (websocket) {
            delete connections[websocket.id];
            no_connections--;
          }
+         sys.debug('Active connections: ' + no_connections)
          break;
       }
       websocket.state = new_state; 
