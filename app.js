@@ -12,6 +12,10 @@ var outstanding_flushes= 0;
 
 //Packet types:
 const DEFAULT_PACKET= 1;
+const CONTROL_PACKET= 2;
+
+const OBJECT_ID_INFORMATION= 1;  // Shared State packet operations 
+const REQUEST_OBJECT_ID_INFORMATION= 2;
 
 /**
  * Flushes all connection queues.
@@ -44,13 +48,21 @@ function flush_queues() {
 
 setInterval(flush_queues, 10);
 
+var options= {
+  max_connections: 1000,
+  hilo_range: 10
+};
+
+var next_range= 1;
+var getCurrentRange= function() {
+  var current_range= next_range;
+  next_range+= options.hilo_range;
+  return current_range 
+}
 
 ws.createServer(function (websocket) {
   var connection_id = 0,
-        message_queue = [],
-        options= {
-          max_connections: 1000
-        };
+      control_messages=[];
         
   websocket.flush_queue= function() {
     var  msg = null,
@@ -66,6 +78,15 @@ ws.createServer(function (websocket) {
         var dataOnTheWire= '[' + DEFAULT_PACKET + ',[' + packet_data.join(',') + ']]';
         this.write(dataOnTheWire);
      }
+     if( control_messages && control_messages.length > 0 ) { 
+       packet_data= [];
+       while ((msg = control_messages.shift())) {       
+         packet_data.push(JSON.stringify( msg ));
+       }
+       control_messages= [];
+       var dataOnTheWire= '[' + CONTROL_PACKET + ',[' + packet_data.join(',') + ']]';
+       this.write(dataOnTheWire);
+     }
   }
 
     /**
@@ -73,16 +94,19 @@ ws.createServer(function (websocket) {
      */
     websocket.kill = function(reason) {
       var disconnect_reason = reason || 'Unknown Reason';
+      delete control_messages;
       this.close();
-      message_queue = [];
     }        
 
      /**
       * Stringify speicified object and sends it to remote part.
       */
-     websocket.post = function(data) {
-       var packet = JSON.stringify(data);
-       this.write(packet);
+     websocket.send_control = function(msg) {
+       control_messages[control_messages.length]= msg;
+     }
+     
+     websocket.fetch_new_object_ids= function() {
+       websocket.send_control([OBJECT_ID_INFORMATION,getCurrentRange(),options.hilo_range]);
      }
     /**
      * Sets the state of the connection
@@ -98,7 +122,8 @@ ws.createServer(function (websocket) {
           while (connections[++connection_id]);
           websocket.id = connection_id;
           websocket.operationsSeen=0;
-          connections[websocket.id] = websocket;  
+          connections[websocket.id] = websocket; 
+          websocket.fetch_new_object_ids();
           websocket.flush_queue();
           break;
         case DISCONNECTED:
@@ -114,14 +139,8 @@ ws.createServer(function (websocket) {
   websocket.addListener('close', function() {
     websocket.set_state(DISCONNECTED);
   }).addListener("connect", function (resource) { 
-    // emitted after handshake
-    sys.debug(sys.inspect(resource))
     sys.debug("connect: " + resource); 
-    websocket.write("welcome\r\n");
     websocket.set_state(CONNECTED);
-
-//    setTimeout(websocket.close, 10 * 1000); // server closes connection after 10s, will also get "close" event
-
   }).addListener("data", function (data) { 
     var packet = null;
 
@@ -133,11 +152,16 @@ ws.createServer(function (websocket) {
        websocket.kill('Malformed message sent by client');
        return;
      }
-      operations[operations.length] = packet[1];
+     if( packet[0] == DEFAULT_PACKET ) {
+       operations[operations.length] = packet[1];
+     }
+     else {
+        if( packet[1][0] == REQUEST_OBJECT_ID_INFORMATION ) {
+          websocket.fetch_new_object_ids();  
+        }
+     }
     }).addListener("close", function () { 
-
-    // emitted when server or client closes connection
-    sys.debug("close");
-
+      // emitted when server or client closes connection
+      sys.debug("close");
   });
 }).listen(8080);
