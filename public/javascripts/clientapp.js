@@ -1,20 +1,13 @@
 $(document).ready(function () { 
-  var objectPool = {
-    nextId: 0,
-    maxId: 0,
-    available: false
+  var clientConfig = {
+    id: 0,
+    ready: false,
+    nextId: 1
   };
   
   var getNextObjectId= function() {
-    // Really we need to set a time when the object-pool was marked
-    // as un-available so we can re-request as appropriate.
-    if( objectPool.available ) {
-      var result= objectPool.nextId++;
-      if( result >= objectPool.maxId ) {
-        objectPool.available= false; 
-        ws.send(JSON.stringify([2,[2]]))
-      }
-      return result;
+    if( clientConfig.ready ) {
+      return clientConfig.id + "-" + clientConfig.nextId++;
     }
     else {
       return -1; 
@@ -29,12 +22,12 @@ $(document).ready(function () {
     onmessage : function (event) {          
       try {
         var packets=eval(event);
+        console.log(JSON.stringify(packets))
         if( packets[0] == 2 ) {
           for(var i=0;i< packets[1].length;i++)  {
-            if( packets[1][i][0] == 1) { //OBJECT_ID_INFORMATION
-              objectPool.nextId= packets[1][i][1];
-              objectPool.maxId = objectPool.nextId + packets[1][i][2] - 1 ;
-              objectPool.available= true;
+            if( packets[1][i][0] == 1) { //CLIENT_ID
+              clientConfig.id= packets[1][i][1];
+              clientConfig.ready= true;
             }
           }
         }

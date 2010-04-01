@@ -19,8 +19,7 @@ var outstanding_flushes= 0;
 const DEFAULT_PACKET= 1;
 const CONTROL_PACKET= 2;
 
-const OBJECT_ID_INFORMATION= 1;  // Shared State packet operations 
-const REQUEST_OBJECT_ID_INFORMATION= 2;
+const CLIENT_ID= 1;  // Shared State packet operations 
 
 /**
  * Flushes all connection queues.
@@ -54,16 +53,10 @@ function flush_queues() {
 setInterval(flush_queues, 10);
 
 var options= {
-  max_connections: 1000,
-  hilo_range: 10
+  max_connections: 1000
 };
 
-var next_range= 1;
-var getCurrentRange= function() {
-  var current_range= next_range;
-  next_range+= options.hilo_range;
-  return current_range 
-}
+var nextClientId= 1;
 
 ws.createServer(function (websocket) {
   var connection_id = 0,
@@ -110,9 +103,6 @@ ws.createServer(function (websocket) {
        control_messages[control_messages.length]= msg;
      }
      
-     websocket.fetch_new_object_ids= function() {
-       websocket.send_control([OBJECT_ID_INFORMATION,getCurrentRange(),options.hilo_range]);
-     }
     /**
      * Sets the state of the connection
      */
@@ -128,7 +118,7 @@ ws.createServer(function (websocket) {
           websocket.id = connection_id;
           websocket.operationsSeen=0;
           connections[websocket.id] = websocket; 
-          websocket.fetch_new_object_ids();
+          websocket.send_control([CLIENT_ID,nextClientId++]);
           websocket.flush_queue();
           break;
         case DISCONNECTED:
@@ -161,9 +151,7 @@ ws.createServer(function (websocket) {
        operations[operations.length] = packet[1];
      }
      else {
-        if( packet[1][0] == REQUEST_OBJECT_ID_INFORMATION ) {
-          websocket.fetch_new_object_ids();  
-        }
+       //control messages
      }
     }).addListener("close", function () { 
       // emitted when server or client closes connection
