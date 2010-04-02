@@ -25,9 +25,12 @@ $(document).ready(function () {
         console.log(JSON.stringify(packets))
         if( packets[0] == Protocol.CONTROL_PACKET ) {
           for(var i=0;i< packets[1].length;i++)  {
-            if( packets[1][i][0] == Protocol.CLIENT_ID) { //CLIENT_ID
+            if( packets[1][i][0] == Protocol.CLIENT_ID) {
               clientConfig.id= packets[1][i][1];
               clientConfig.ready= true;
+            }
+            else { // WIPE
+              contexto.clearRect(0, 0, canvas.width, canvas.height);
             }
           }
         }
@@ -60,6 +63,7 @@ $(document).ready(function () {
               }
           } 
           contexto.drawImage(canvasr, 0, 0);
+          contextr.clearRect(0, 0, canvas.width, canvas.height);
         }
       }
       catch(e) {
