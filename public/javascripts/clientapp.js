@@ -1,4 +1,4 @@
-$(document).ready(function () { 
+window.addEvent('domready', function() {
   var clientConfig = {
     id: 0,
     ready: false,
@@ -13,68 +13,68 @@ $(document).ready(function () {
       return -1; 
     }
   }
-  var ws = $.ws.conn({
-    url : 'ws://localhost:8081',
-    hbStr: null,
-    onopen : function () {
-      console.log('connected');
-    },
-    onmessage : function (event) {          
-      try {
-        var packets=eval(event);
-        console.log(JSON.stringify(packets))
-        if( packets[0] == Protocol.CONTROL_PACKET ) {
-          for(var i=0;i< packets[1].length;i++)  {
-            if( packets[1][i][0] == Protocol.CLIENT_ID) {
-              clientConfig.id= packets[1][i][1];
-              clientConfig.ready= true;
-            }
-            else { // WIPE
-              contexto.clearRect(0, 0, canvas.width, canvas.height);
-            }
-          }
-        }
-        else {
-          contextr.clearRect(0, 0, canvas.width, canvas.height);
-          for(var i=0;i< packets[1].length;i++)  {
-              switch(packets[1][i][1]) {
-                case 'box':
-                  contextr.strokeRect(packets[1][i][2], packets[1][i][3], packets[1][i][4], packets[1][i][5]);
-                  break;
-                case 'line':
-                  contextr.beginPath();
-                  contextr.moveTo(packets[1][i][2], packets[1][i][3]);
-                  contextr.lineTo(packets[1][i][4], packets[1][i][5]);
-                  contextr.stroke();
-                  contextr.closePath();
-                  break; 
-                case 'path':
-                  contextr.beginPath();
-                  for(var j=0;j< packets[1][i][2].length;j++ ) {
-                    var cmd=packets[1][i][2][j]; 
-                    if( cmd[0] == 'M' ) {
-                      contextr.moveTo(cmd[1], cmd[2])
-                    }else if ( cmd[0] == 'L' ) {
-                      contextr.lineTo(cmd[1], cmd[2])
-                    }
-                  }
-                  contextr.stroke();
-                  break;
-              }
-          } 
-          contexto.drawImage(canvasr, 0, 0);
-          contextr.clearRect(0, 0, canvas.width, canvas.height);
-        }
-      }
-      catch(e) {
-       console.log(e +" : " + event);
-      }
-    },
+  var ms= new MooSocket({
+     url : "ws://localhost:8081",
+     hbStr: null,
+     onopen : function () {
+       console.log('connected');
+     },
+     onmessage : function (event) {          
+       try {
+         var packets=eval(event);
+         if( packets[0] == Protocol.CONTROL_PACKET ) {
+           for(var i=0;i< packets[1].length;i++)  {
+             if( packets[1][i][0] == Protocol.CLIENT_ID) {
+               clientConfig.id= packets[1][i][1];
+               clientConfig.ready= true;
+             }
+             else { // WIPE
+               contexto.clearRect(0, 0, canvas.width, canvas.height);
+             }
+           }
+         }
+         else {
+           contextr.clearRect(0, 0, canvas.width, canvas.height);
+           for(var i=0;i< packets[1].length;i++)  {
+               switch(packets[1][i][1]) {
+                 case 'box':
+                   contextr.strokeRect(packets[1][i][2], packets[1][i][3], packets[1][i][4], packets[1][i][5]);
+                   break;
+                 case 'line':
+                   contextr.beginPath();
+                   contextr.moveTo(packets[1][i][2], packets[1][i][3]);
+                   contextr.lineTo(packets[1][i][4], packets[1][i][5]);
+                   contextr.stroke();
+                   contextr.closePath();
+                   break; 
+                 case 'path':
+                   contextr.beginPath();
+                   for(var j=0;j< packets[1][i][2].length;j++ ) {
+                     var cmd=packets[1][i][2][j]; 
+                     if( cmd[0] == 'M' ) {
+                       contextr.moveTo(cmd[1], cmd[2])
+                     }else if ( cmd[0] == 'L' ) {
+                       contextr.lineTo(cmd[1], cmd[2])
+                     }
+                   }
+                   contextr.stroke();
+                   break;
+               }
+           } 
+           contexto.drawImage(canvasr, 0, 0);
+           contextr.clearRect(0, 0, canvas.width, canvas.height);
+         }
+       }
+       catch(e) {
+        console.log(e +" : " + event);
+       }
+     },
 
-    onclose : function (event) {
-      console.log('disconnected');
-    }
-  });
+     onclose : function (event) {
+       console.log('disconnected');
+     }                         
+   });
+
   /* Borrowing heavily from: http://dev.opera.com/articles/view/html5-canvas-painting/ */
   
     var canvas, context;
@@ -208,7 +208,7 @@ $(document).ready(function () {
         if (tool.started) {
           tool.mousemove(ev);
           tool.started = false;
-          $(ws).wssend(JSON.stringify([1,[getNextObjectId(), 'path', tool.path_commands]]));
+          ms.wssend(JSON.encode([1,[getNextObjectId(), 'path', tool.path_commands]]));
           img_update();
         }
       };
@@ -254,7 +254,7 @@ $(document).ready(function () {
         if (tool.started) {
           tool.mousemove(ev);
           tool.started = false;  
-          $(ws).wssend(JSON.stringify([1,[tool.id, 'box', tool.x, tool.y, tool.w,tool.h]]));
+          ms.wssend(JSON.encode([1,[tool.id, 'box', tool.x, tool.y, tool.w,tool.h]]));
           img_update();
         }
       };
@@ -293,7 +293,7 @@ $(document).ready(function () {
         if (tool.started) {
           tool.mousemove(ev);
           tool.started = false;
-          $(ws).wssend(JSON.stringify([1,[getNextObjectId(), 'line', tool.x0, tool.y0, tool.x1,tool.y1]]));
+          ms.wssend(JSON.encode([1,[getNextObjectId(), 'line', tool.x0, tool.y0, tool.x1,tool.y1]]));
           img_update();
         }
       };
