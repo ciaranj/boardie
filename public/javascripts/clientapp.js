@@ -23,9 +23,9 @@ $(document).ready(function () {
       try {
         var packets=eval(event);
         console.log(JSON.stringify(packets))
-        if( packets[0] == 2 ) {
+        if( packets[0] == Protocol.CONTROL_PACKET ) {
           for(var i=0;i< packets[1].length;i++)  {
-            if( packets[1][i][0] == 1) { //CLIENT_ID
+            if( packets[1][i][0] == Protocol.CLIENT_ID) { //CLIENT_ID
               clientConfig.id= packets[1][i][1];
               clientConfig.ready= true;
             }
