@@ -1,3 +1,6 @@
 [submodule "lib/express"]
 	path = lib/express
 	url = git://github.com/visionmedia/express.git
+[submodule "public/javascripts/moosockets"]
+	path = public/javascripts/moosockets
+	url = http://github.com/ciaranj/moosockets.git
