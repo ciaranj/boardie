@@ -1,4 +1,41 @@
-window.addEvent('domready', function() {
+function domReady() { 
+  var canvas, context;
+  var canvaso, contexto;
+  var canvasr, contextr;
+  
+	MochaUI.Desktop = new MochaUI.Desktop();
+	MochaUI.Dock = new MochaUI.Dock();
+
+	new MochaUI.Column({
+	  id: 'mainColumn',
+		placement: 'main',	
+		width: null,
+		resizeLimit: [100, 300]
+	});
+
+	var column=new MochaUI.Column({
+		id: 'sideColumn2',
+		placement: 'right',	
+		width: 220,		
+		resizeLimit: [195, 300]
+	});
+
+	var panel= new MochaUI.Panel({
+		id: 'doodle-panel',
+		title: 'Doodle',
+		contentURL: 'pages/file-view.html',
+		column: 'mainColumn',
+		content: document.getElementById('container'),
+		padding: { top: 0, right: 0, bottom: 0, left: 0 }  
+	});
+
+    MochaUI.NewWindowsFromHTML = new MochaUI.NewWindowsFromHTML();
+  	
+  	MochaUI.Modal = new MochaUI.Modal();
+  	MochaUI.Desktop.desktop.setStyles({
+  		'background': '#fff',
+  		'visibility': 'visible'
+  	});
   var clientConfig = {
     id: 0,
     ready: false,
@@ -13,7 +50,9 @@ window.addEvent('domready', function() {
       return -1; 
     }
   }
-  var dispatcher = new EventsDispatcher("ws://localhost:8081");
+  var ws_address= window.location.host;
+  ws_address= "ws://"+ ws_address.replace(/:8080/, ":8081");
+  var dispatcher = new EventsDispatcher( ws_address );
 
   // bind to server events
   dispatcher
@@ -62,9 +101,7 @@ window.addEvent('domready', function() {
 
   /* Borrowing heavily from: http://dev.opera.com/articles/view/html5-canvas-painting/ */
   
-    var canvas, context;
-    var canvaso, contexto;
-    var canvasr, contextr;
+
 
      // The active tool instance.
     var tool = false;
@@ -302,4 +339,35 @@ window.addEvent('domready', function() {
       }
     }
     init();
-});
+
+    var resizeFunction= function(noRefresh) {
+      var newWidth= panel.panelEl.getSize().x - 1;
+      var newHeight= panel.panelEl.getSize().y - 1;
+      if( newWidth > canvas.width ) {
+        canvaso.width= newWidth;
+        canvasr.width= newWidth;
+         canvas.width= newWidth;
+      }
+  	  if( newHeight > canvas.height ) {
+  	    canvaso.height= newHeight;
+  	    canvasr.height= newHeight;
+  	     canvas.height= newHeight;
+	    }
+	    if( noRefresh !== false )  {
+	      dispatcher.trigger( Protocol.REFRESH );
+	    }
+    }
+    resizeFunction(false); // Call initially.
+  	window.addEvent( 'resize',   resizeFunction );
+  	column.addEvent( 'resize',   resizeFunction );
+  	column.addEvent( 'collapse', resizeFunction );
+}
+(function(){
+  if(document.body && document.body.lastChild) {
+    domReady();
+  } 
+  else {
+    return setTimeout(arguments.callee,0);
+  }
+})();
+

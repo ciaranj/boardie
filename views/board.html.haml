@@ -11,15 +11,17 @@
     %link{ rel:"stylesheet",href:"public/stylesheets/ui.css"}
     %link{ rel:"stylesheet",href:"public/stylesheets/content.css"}
   %body
-    %p
-      %label
-        Drawing tool:    
-        %select{ id:"dtool" }
-          %option{ value:"line" } Line  
-          %option{ value:"rect" } Rectangle  
-          %option{ value:"pencil" } Pencil
+    #desktop
+      #pageWrapper
+        #toolbox.mocha{ style: "width:120px;height:255px;top:50px;left:350px"}
+          %h3.mochaTitle Toolbox
+          %select{ id:"dtool" }
+            %option{ value:"line" } Line  
+            %option{ value:"rect" } Rectangle  
+            %option{ value:"pencil" } Pencil
+      #desktopFooter
     #container
-      %canvas#imageView{ width:400, height: 300}
+      %canvas#imageView
         %p
           Unfortunately, your browser is currently unsupported by our web application.  We are sorry for the inconvenience. Please use one of the supported browsers listed below, or draw the image you want using an offline tool.
         %p
@@ -35,10 +37,4 @@
           ,
           %a{ href:"http://www.konqueror.org" }
             Konqueror
-          .
-    %p
-      Please be aware that the board is auto-wiping every 5 minutes.
-    %p
-      Please also note that any diagrams currently displayed do not represent my views or opinions.
-    %p
-      And I might as well apologise now if someone has *inevitably* drawn some genitalia *sigh*
+          .      
